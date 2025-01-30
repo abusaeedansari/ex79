@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Exercise 7.9 – Addition, Subtraction & Story Sums</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue&family=Roboto&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex; justify-content: center; align-items: flex-start;
+      min-height: 100vh; padding: 20px;
+      background: linear-gradient(135deg, #f0f4f8, #ffffff);
+      font-family: 'Roboto', sans-serif; color: #333;
+    }
+    .container {
+      background: #fff; max-width: 1000px; width: 100%;
+      border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      padding: 20px; animation: fadeIn 1s ease-in-out; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      font-family: 'Comic Neue', cursive; font-size: 48px;
+      color: #2E86C1; margin-bottom: 10px; text-align: center;
+    }
+    #score-display {
+      font-size: 22px; color: #C0392B; margin-bottom: 20px;
+      font-weight: bold;
+    }
+    .progress-container {
+      width: 100%; background-color: #e0e0e0; border-radius: 10px;
+      height: 25px; margin-bottom: 20px; overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%; width: 0%; background-color: #2E86C1;
+      transition: width 0.3s ease;
+    }
+    #question-box { width: 100%; }
+    .navigation-buttons {
+      display: flex; justify-content: space-between;
+      width: 100%; max-width: 400px; margin-top: 20px;
+    }
+    .navigation-buttons button {
+      padding: 10px 20px; font-size: 18px; color: #fff;
+      background-color: #2E86C1; border: none; border-radius: 5px;
+      cursor: pointer; transition: background-color 0.3s;
+    }
+    .navigation-buttons button:hover:not(:disabled) {
+      background-color: #1B4F72;
+    }
+    .navigation-buttons button:disabled {
+      background-color: #ccc; cursor: not-allowed;
+    }
+    .completion-message {
+      display: none; margin-top: 30px; font-size: 32px; color: #27ae60;
+      font-family: 'Comic Neue', cursive; text-align: center;
+    }
+    .question-text {
+      font-size: 28px; margin-bottom: 10px;
+      background: #f9f9f9; border: 2px solid #2E86C1;
+      border-radius: 10px; padding: 10px;
+      font-family: 'Comic Neue', cursive; color: #34495E; text-align: left;
+    }
+    .table-container { overflow-x: auto; margin-bottom: 10px; }
+    .digits-table {
+      border-collapse: collapse; margin: 0 auto; font-size: 24px;
+    }
+    .digits-table th, .digits-table td {
+      border: 2px solid #2E86C1; width: 90px; height: 50px;
+      text-align: center; vertical-align: middle;
+    }
+    .header-row th { background-color: #cce6ff; font-weight: bold; }
+    .carry-row td { background-color: #e8f4ff; }
+    .two-question-block {
+      display: flex; flex-direction: row; justify-content: space-between;
+      gap: 25px; margin-bottom: 30px;
+    }
+    .single-question {
+      width: 48%; background: #fdfdfd; border-radius: 10px;
+      padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .story-container {
+      display: flex; flex-direction: column; align-items: flex-start;
+      width: 100%; margin-bottom: 20px;
+    }
+    .story-content {
+      background: #f1faff; border: 2px solid #2E86C1;
+      border-radius: 10px; padding: 15px; margin-bottom: 15px; font-size: 24px;
+    }
+    .story-steps {
+      background: #fdf6e3; border: 2px solid #2E86C1; border-radius: 10px;
+      padding: 15px; width: 100%; font-size: 24px; text-align: left;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(45%,1fr));
+      gap: 20px; justify-content: center; align-items: flex-start;
+    }
+    .step {
+      display: none; margin-bottom: 20px; border-left: 5px solid #2E86C1;
+      border-radius: 5px; padding: 10px; color: #34495E; font-size: 20px;
+    }
+    .step.solution {
+      border-left: 5px solid #27ae60; color: #27ae60; font-weight: bold;
+    }
+    .step-title {
+      font-size: 22px; color: #2E86C1; margin-bottom: 10px; font-weight: bold;
+    }
+    .step-content { font-size: 20px; margin-bottom: 10px; }
+    .amount-box { font-size: 20px; margin-bottom: 10px; }
+    .answer-check-group {
+      margin-top: 10px; display: flex; flex-direction: row; align-items: center; gap: 10px;
+    }
+    .answer-check-group input[type="text"] {
+      padding: 8px 12px; font-size: 16px; border: 2px solid #2E86C1;
+      border-radius: 5px; outline: none;
+    }
+    .answer-check-group input[type="text"]:focus {
+      border-color: #1B4F72;
+    }
+    .answer-check-group button {
+      background-color: #2E86C1; color: #fff; padding: 8px 12px; font-size: 16px;
+      border: none; border-radius: 5px; cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .answer-check-group button:hover {
+      background-color: #1B4F72;
+    }
+    .feedback {
+      margin-left: 15px; font-weight: bold; font-size: 16px;
+    }
+    .question-text em {
+      font-style: italic; color: #2E86C1; font-weight: 600;
+    }
+    .digits-table th em, .digits-table td em {
+      font-style: italic; color: #2E86C1;
+    }
+    @media(max-width:768px) {
+      h1 { font-size: 32px; }
+      #score-display { font-size: 18px; }
+      .question-text { font-size: 22px; }
+      .digits-table th, .digits-table td { font-size: 18px; width: 60px; height: 40px; }
+      .step-title { font-size: 18px; }
+      .step-content, .amount-box { font-size: 16px; }
+      .two-question-block { flex-direction: column; }
+      .single-question { width: 100%; }
+    }
+    @media(max-width:480px) {
+      h1 { font-size: 28px; }
+      #score-display { font-size: 16px; }
+      .question-text { font-size: 18px; }
+      .digits-table th, .digits-table td { font-size: 16px; width: 50px; height: 40px; }
+      .step { font-size: 16px; }
+      .step-title { font-size: 16px; }
+      .step-content, .amount-box { font-size: 14px; }
+      .completion-message { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Exercise 7.9 – Addition, Subtraction &amp; Story Sums</h1>
+    <div id="score-display">Score: 0</div>
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div id="question-box"></div>
+    <div class="navigation-buttons">
+      <button id="prev-button">Previous</button>
+      <button id="next-button">Next</button>
+    </div>
+    <div class="completion-message" id="completion-message">
+      🎉 All questions completed! Great job! 🎉
+    </div>
+  </div>
+
+  <script>
+    let score = 0;
+    const scoreDisplay = document.getElementById('score-display');
+    function updateScore(points) {
+      if (points > 0) {
+        score += points;
+        scoreDisplay.textContent = "Score: " + score;
+      }
+    }
+
+    /* --------------------- FIXED: All ml are max 3 digits, "l" is not "1" --------------------- */
+
+    const nonStoryQuestions = [
+      /* 1) Add the following */
+      {
+        questionText: "a) 4 <em>l</em> 254 <em>ml</em> + 3 <em>l</em> 123 <em>ml</em>",
+        correctAnswer: "7 l 377 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>4</td><td>254</td></tr>
+            <tr><td>3</td><td>123</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "b) 3 <em>l</em> 624 <em>ml</em> + 2 <em>l</em> 342 <em>ml</em>",
+        correctAnswer: "5 l 966 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>3</td><td>624</td></tr>
+            <tr><td>2</td><td>342</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "c) 5 <em>l</em> 468 <em>ml</em> + 1 <em>l</em> 230 <em>ml</em>",
+        correctAnswer: "6 l 698 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>5</td><td>468</td></tr>
+            <tr><td>1</td><td>230</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "d) 6 <em>l</em> 797 <em>ml</em> + 2 <em>l</em> 236 <em>ml</em>",
+        correctAnswer: "9 l 33 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>6</td><td>797</td></tr>
+            <tr><td>2</td><td>236</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "e) 4 <em>l</em> 406 <em>ml</em> + 2 <em>l</em> 875 <em>ml</em>",
+        correctAnswer: "7 l 281 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>4</td><td>406</td></tr>
+            <tr><td>2</td><td>875</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "f) 2 <em>l</em> 549 <em>ml</em> + 3 <em>l</em> 610 <em>ml</em>",
+        correctAnswer: "6 l 159 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>2</td><td>549</td></tr>
+            <tr><td>3</td><td>610</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "g) 3 <em>l</em> 645 <em>ml</em> + 3 <em>l</em> 890 <em>ml</em>",
+        correctAnswer: "7 l 535 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>3</td><td>645</td></tr>
+            <tr><td>3</td><td>890</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "h) 5 <em>l</em> 670 <em>ml</em> + 3 <em>l</em> 584 <em>ml</em>",
+        correctAnswer: "9 l 254 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>5</td><td>670</td></tr>
+            <tr><td>3</td><td>584</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+
+      /* 2) Subtract the following */
+      {
+        questionText: "a) 6 <em>l</em> 270 <em>ml</em> – 3 <em>l</em> 160 <em>ml</em>",
+        correctAnswer: "3 l 110 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>6</td><td>270</td></tr>
+            <tr><td>3</td><td>160</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "b) 8 <em>l</em> 784 <em>ml</em> – 3 <em>l</em> 632 <em>ml</em>",
+        correctAnswer: "5 l 152 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>8</td><td>784</td></tr>
+            <tr><td>3</td><td>632</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "c) 5 <em>l</em> 250 <em>ml</em> – 1 <em>l</em> 150 <em>ml</em>",
+        correctAnswer: "4 l 100 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>5</td><td>250</td></tr>
+            <tr><td>1</td><td>150</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "d) 7 <em>l</em> 527 <em>ml</em> – 2 <em>l</em> 129 <em>ml</em>",
+        correctAnswer: "5 l 398 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>7</td><td>527</td></tr>
+            <tr><td>2</td><td>129</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "e) 6 <em>l</em> 200 <em>ml</em> – 3 <em>l</em> 643 <em>ml</em>",
+        correctAnswer: "2 l 557 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>6</td><td>200</td></tr>
+            <tr><td>3</td><td>643</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "f) 9 <em>l</em> 180 <em>ml</em> – 2 <em>l</em> 240 <em>ml</em>",
+        correctAnswer: "6 l 940 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>9</td><td>180</td></tr>
+            <tr><td>2</td><td>240</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "g) 3 <em>l</em> 775 <em>ml</em> – 2 <em>l</em> 987 <em>ml</em>",
+        correctAnswer: "1 l -212 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>3</td><td>775</td></tr>
+            <tr><td>2</td><td>987</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      },
+      {
+        questionText: "h) 8 <em>l</em> 175 <em>ml</em> – 4 <em>l</em> 760 <em>ml</em>",
+        correctAnswer: "3 l -585 ml",
+        tableHTML: `
+          <table class="digits-table">
+            <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+            <tr class="carry-row"><td></td><td></td></tr>
+            <tr><td>8</td><td>175</td></tr>
+            <tr><td>4</td><td>760</td></tr>
+            <tr><td>__</td><td>__</td></tr>
+          </table>
+        `,
+        answeredCorrectly: false
+      }
+    ];
+
+    const storyQuestions = [
+      {
+        question: "a) A painter needs 1 <em>l</em> 526 <em>ml</em> of white paint and 1 <em>l</em> 482 <em>ml</em> of pink paint. Find the total amount of paint needed.",
+        correctAnswer: "3 l 8 ml",
+        steps: [
+          `<div class="step">
+             <div class="step-title">To Find:</div>
+             <div class="step-content">Total amount of paint required.</div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Information Given:</div>
+             <div class="step-content">
+               <div class="amount-box">White paint: 1 <em>l</em> 526 <em>ml</em></div>
+               <div class="amount-box">Pink paint: 1 <em>l</em> 482 <em>ml</em></div>
+             </div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Working (Addition):</div>
+             <div class="table-container">
+               <table class="digits-table">
+                 <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+                 <tr class="carry-row"><td></td><td></td></tr>
+                 <tr><td>1</td><td>526</td></tr>
+                 <tr><td>1</td><td>482</td></tr>
+                 <tr><td></td><td></td></tr>
+               </table>
+             </div>
+           </div>`,
+          `<div class="step solution">
+             Therefore, total paint needed = ____ l ____ ml.
+           </div>`
+        ],
+        answeredCorrectly: false
+      },
+      {
+        question: "b) Rajesh used 6 <em>l</em> 650 <em>ml</em> of petrol in week 1 and 2 <em>l</em> 437 <em>ml</em> in week 2. How much petrol did he use in both weeks?",
+        correctAnswer: "9 l 87 ml",
+        steps: [
+          `<div class="step">
+             <div class="step-title">To Find:</div>
+             <div class="step-content">Total petrol used in both weeks.</div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Information Given:</div>
+             <div class="step-content">
+               <div class="amount-box">Week 1: 6 <em>l</em> 650 <em>ml</em></div>
+               <div class="amount-box">Week 2: 2 <em>l</em> 437 <em>ml</em></div>
+             </div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Working (Addition):</div>
+             <div class="table-container">
+               <table class="digits-table">
+                 <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+                 <tr class="carry-row"><td></td><td></td></tr>
+                 <tr><td>6</td><td>650</td></tr>
+                 <tr><td>2</td><td>437</td></tr>
+                 <tr><td></td><td></td></tr>
+               </table>
+             </div>
+           </div>`,
+          `<div class="step solution">
+             Therefore, total petrol used = ____ l ____ ml.
+           </div>`
+        ],
+        answeredCorrectly: false
+      },
+      {
+        question: "c) The capacity of a bucket is 9 <em>l</em> 995 <em>ml</em>. It contains 2 <em>l</em> 200 <em>ml</em> of water. How much more water can it contain?",
+        correctAnswer: "7 l 795 ml",
+        steps: [
+          `<div class="step">
+             <div class="step-title">To Find:</div>
+             <div class="step-content">Remaining capacity in the bucket.</div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Information Given:</div>
+             <div class="step-content">
+               <div class="amount-box">Bucket capacity: 9 <em>l</em> 995 <em>ml</em></div>
+               <div class="amount-box">Current water: 2 <em>l</em> 200 <em>ml</em></div>
+             </div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Working (Subtraction):</div>
+             <div class="table-container">
+               <table class="digits-table">
+                 <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+                 <tr class="carry-row"><td></td><td></td></tr>
+                 <tr><td>9</td><td>995</td></tr>
+                 <tr><td>2</td><td>200</td></tr>
+                 <tr><td></td><td></td></tr>
+               </table>
+             </div>
+           </div>`,
+          `<div class="step solution">
+             Therefore, it can hold another ____ l ____ ml of water.
+           </div>`
+        ],
+        answeredCorrectly: false
+      },
+      {
+        question: "d) Ramesh drank 2 <em>l</em> 250 <em>ml</em> of juice on Monday and 1 <em>l</em> 352 <em>ml</em> of juice on Tuesday. How much juice did Ramesh drink in all?",
+        correctAnswer: "3 l 602 ml",
+        steps: [
+          `<div class="step">
+             <div class="step-title">To Find:</div>
+             <div class="step-content">Total juice consumed across Monday & Tuesday.</div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Information Given:</div>
+             <div class="step-content">
+               <div class="amount-box">Monday: 2 <em>l</em> 250 <em>ml</em></div>
+               <div class="amount-box">Tuesday: 1 <em>l</em> 352 <em>ml</em></div>
+             </div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Working (Addition):</div>
+             <div class="table-container">
+               <table class="digits-table">
+                 <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+                 <tr class="carry-row"><td></td><td></td></tr>
+                 <tr><td>2</td><td>250</td></tr>
+                 <tr><td>1</td><td>352</td></tr>
+                 <tr><td></td><td></td></tr>
+               </table>
+             </div>
+           </div>`,
+          `<div class="step solution">
+             Therefore, total juice consumed is ____ l ____ ml.
+           </div>`
+        ],
+        answeredCorrectly: false
+      },
+      {
+        question: "e) Asha bought 5 <em>l</em> 348 <em>ml</em> of fabric paint to paint kurtis, and she used 1 <em>l</em> 879 <em>ml</em> of paint. How much fabric paint is left with her?",
+        correctAnswer: "3 l 469 ml",
+        steps: [
+          `<div class="step">
+             <div class="step-title">To Find:</div>
+             <div class="step-content">Fabric paint left after usage.</div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Information Given:</div>
+             <div class="step-content">
+               <div class="amount-box">Bought: 5 <em>l</em> 348 <em>ml</em></div>
+               <div class="amount-box">Used: 1 <em>l</em> 879 <em>ml</em></div>
+             </div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Working (Subtraction):</div>
+             <div class="table-container">
+               <table class="digits-table">
+                 <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+                 <tr class="carry-row"><td></td><td></td></tr>
+                 <tr><td>5</td><td>348</td></tr>
+                 <tr><td>1</td><td>879</td></tr>
+                 <tr><td></td><td></td></tr>
+               </table>
+             </div>
+           </div>`,
+          `<div class="step solution">
+             Therefore, paint left is ____ l ____ ml.
+           </div>`
+        ],
+        answeredCorrectly: false
+      },
+      {
+        question: "f) Saroj bought 6 <em>l</em> 500 <em>ml</em> of milk, and she used 2 <em>l</em> 253 <em>ml</em> to make kheer. How much milk is left now?",
+        correctAnswer: "4 l 247 ml",
+        steps: [
+          `<div class="step">
+             <div class="step-title">To Find:</div>
+             <div class="step-content">Milk left after usage.</div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Information Given:</div>
+             <div class="step-content">
+               <div class="amount-box">Bought: 6 <em>l</em> 500 <em>ml</em></div>
+               <div class="amount-box">Used: 2 <em>l</em> 253 <em>ml</em></div>
+             </div>
+           </div>`,
+          `<div class="step">
+             <div class="step-title">Working (Subtraction):</div>
+             <div class="table-container">
+               <table class="digits-table">
+                 <tr class="header-row"><th><em>l</em></th><th><em>ml</em></th></tr>
+                 <tr class="carry-row"><td></td><td></td></tr>
+                 <tr><td>6</td><td>500</td></tr>
+                 <tr><td>2</td><td>253</td></tr>
+                 <tr><td></td><td></td></tr>
+               </table>
+             </div>
+           </div>`,
+          `<div class="step solution">
+             Therefore, milk left = ____ l ____ ml.
+           </div>`
+        ],
+        answeredCorrectly: false
+      }
+    ];
+
+    let nonStoryIndex = 0;
+    let storyIndex = 0;
+    const totalNonStoryPairs = Math.ceil(nonStoryQuestions.length / 2);
+    const totalStoryCount = storyQuestions.length;
+    const totalSteps = totalNonStoryPairs + totalStoryCount;
+    let currentStep = 0;
+    let currentState = 'nonstory';
+    let currentStoryStep = -1;
+
+    const questionBox = document.getElementById('question-box');
+    const progressBar = document.getElementById('progress-bar');
+    const completionMessage = document.getElementById('completion-message');
+    const nextButton = document.getElementById('next-button');
+    const prevButton = document.getElementById('prev-button');
+
+    function updateProgress() {
+      const percent = (currentStep / totalSteps) * 100;
+      progressBar.style.width = percent + '%';
+    }
+
+    function updateNavButtons() {
+      if (currentState === 'nonstory') {
+        prevButton.disabled = (nonStoryIndex === 0);
+      } else {
+        prevButton.disabled = false;
+      }
+      nextButton.disabled = false;
+    }
+
+    function showNonStoryPair() {
+      questionBox.innerHTML = '';
+      const startQ = nonStoryIndex * 2;
+      const endQ = Math.min(startQ + 2, nonStoryQuestions.length);
+      const block = document.createElement('div');
+      block.className = 'two-question-block';
+
+      for (let i = startQ; i < endQ; i++) {
+        const qObj = nonStoryQuestions[i];
+        const single = document.createElement('div');
+        single.className = 'single-question';
+        single.innerHTML = `
+          <div class="question-text">${qObj.questionText}</div>
+          <div class="table-container">${qObj.tableHTML}</div>
+          <div class="answer-check-group">
+            <input type="text" placeholder="e.g. 7 l 377 ml" />
+            <button>Check</button>
+            <div class="feedback"></div>
+          </div>
+        `;
+        const checkBtn = single.querySelector('button');
+        const inputEl = single.querySelector('input');
+        const feedbackEl = single.querySelector('.feedback');
+        checkBtn.addEventListener('click', () => {
+          const userAns = inputEl.value.trim().toLowerCase();
+          const correct = qObj.correctAnswer.toLowerCase();
+          if (!qObj.answeredCorrectly && userAns === correct) {
+            qObj.answeredCorrectly = true;
+            feedbackEl.textContent = "Correct!";
+            feedbackEl.style.color = "green";
+            updateScore(10);
+          } else if (userAns === correct) {
+            feedbackEl.textContent = "Correct!";
+            feedbackEl.style.color = "green";
+          } else {
+            feedbackEl.textContent = "Incorrect, try again!";
+            feedbackEl.style.color = "red";
+          }
+        });
+        block.appendChild(single);
+      }
+
+      questionBox.appendChild(block);
+      updateNavButtons();
+      updateProgress();
+    }
+
+    function showStoryQuestion() {
+      if (!storyQuestions[storyIndex]) return;
+      currentStoryStep = -1;
+      const qObj = storyQuestions[storyIndex];
+      questionBox.innerHTML = `
+        <div class="story-container">
+          <div class="story-content">
+            <div class="step-title">Question:</div>
+            <div class="step-content">${qObj.question}</div>
+          </div>
+          <div class="story-steps"></div>
+        </div>
+      `;
+
+      const checkWrapper = document.createElement('div');
+      checkWrapper.className = 'answer-check-group';
+      checkWrapper.innerHTML = `
+        <input type="text" placeholder="Your final answer here" />
+        <button>Check</button>
+        <div class="feedback"></div>
+      `;
+      questionBox.querySelector('.story-container').appendChild(checkWrapper);
+
+      const checkBtn = checkWrapper.querySelector('button');
+      const inputEl = checkWrapper.querySelector('input');
+      const feedbackEl = checkWrapper.querySelector('.feedback');
+
+      checkBtn.addEventListener('click', () => {
+        const userAns = inputEl.value.trim().toLowerCase();
+        const correctAns = qObj.correctAnswer.toLowerCase();
+        if (!qObj.answeredCorrectly && userAns === correctAns) {
+          qObj.answeredCorrectly = true;
+          feedbackEl.textContent = "Correct!";
+          feedbackEl.style.color = "green";
+          updateScore(10);
+        } else if (userAns === correctAns) {
+          feedbackEl.textContent = "Correct!";
+          feedbackEl.style.color = "green";
+        } else {
+          feedbackEl.textContent = "Incorrect, try again!";
+          feedbackEl.style.color = "red";
+        }
+      });
+
+      updateNavButtons();
+      updateProgress();
+    }
+
+    function showNextStoryStep() {
+      const qObj = storyQuestions[storyIndex];
+      currentStoryStep++;
+      if (currentStoryStep < qObj.steps.length) {
+        const stepsContainer = questionBox.querySelector('.story-steps');
+        stepsContainer.innerHTML += qObj.steps[currentStoryStep];
+        stepsContainer.lastElementChild.style.display = 'block';
+        updateNavButtons();
+        updateProgress();
+      } else {
+        storyIndex++;
+        currentStep++;
+        if (storyIndex >= totalStoryCount) {
+          questionBox.innerHTML = "";
+          progressBar.style.width = '100%';
+          completionMessage.style.display = 'block';
+          updateNavButtons();
+        } else {
+          showStoryQuestion();
+        }
+      }
+    }
+
+    function showPreviousStoryStep() {
+      if (currentStoryStep > 0) {
+        const stepsContainer = questionBox.querySelector('.story-steps');
+        const steps = stepsContainer.querySelectorAll('.step');
+        steps[steps.length - 1].remove();
+        currentStoryStep--;
+        updateNavButtons();
+        updateProgress();
+      } else {
+        if (storyIndex > 0) {
+          storyIndex--;
+          currentStep--;
+          showStoryQuestion();
+        } else {
+          currentState = 'nonstory';
+          nonStoryIndex = totalNonStoryPairs - 1;
+          showNonStoryPair();
+        }
+      }
+    }
+
+    function showNext() {
+      if (currentState === 'nonstory') {
+        currentStep++;
+        nonStoryIndex++;
+        if (nonStoryIndex < totalNonStoryPairs) {
+          showNonStoryPair();
+        } else {
+          currentState = 'story';
+          storyIndex = 0;
+          showStoryQuestion();
+        }
+      } else {
+        showNextStoryStep();
+      }
+    }
+
+    function showPrev() {
+      if (currentState === 'nonstory') {
+        if (nonStoryIndex > 0) {
+          nonStoryIndex--;
+          currentStep--;
+          showNonStoryPair();
+        }
+      } else {
+        if (storyIndex === 0 && nonStoryIndex >= totalNonStoryPairs) {
+          currentState = 'nonstory';
+          nonStoryIndex = totalNonStoryPairs - 1;
+          if (currentStep > 0) currentStep--;
+          showNonStoryPair();
+        } else {
+          showPreviousStoryStep();
+        }
+      }
+    }
+
+    showNonStoryPair();
+    prevButton.addEventListener('click', showPrev);
+    nextButton.addEventListener('click', showNext);
+    updateNavButtons();
+  </script>
+</body>
+</html>
